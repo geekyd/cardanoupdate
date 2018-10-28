@@ -6,7 +6,7 @@ import { Projects } from './projects'
 import { Comments } from '../comments/comments'
 
 import { Tags } from '/imports/api/tags/tags'
-import { addTag, mentionTag, getTag } from '/imports/api/tags/methods'
+import { addTag, mentionTag, getTag, getTags, deleteTag } from '/imports/api/tags/methods'
 
 import { isModerator, userStrike } from '/imports/api/user/methods'
 
@@ -56,7 +56,8 @@ export const addProject = new ValidatedMethod({
             clean: true
         }),
     run(data) {
-        if (Meteor.isServer) {
+        if (true || Meteor.isServer) {
+
             if (!Meteor.userId()) {
                 throw new Meteor.Error('Error.', 'You have to be logged in.')
             }
@@ -74,9 +75,18 @@ export const addProject = new ValidatedMethod({
 
             if (data.tags != undefined) {
                 data.tags.forEach(tag => {
-                    if(tag.id && tag.id != '') {
+                    let t = getTags(tag.name)
+
+                    t = Array.from(t)
+
+                    if(t.length === 1 && t[0].id && t[0].id != '') {
                         // add mention
                         mentionTag(tag.id)
+                    } else if (t.length > 1) { 
+                        // delete multiple tags
+                        t.slice(1).forEach(duplicate => {
+                            deleteTag(duplicate._id)
+                        })
                     } else if(tag.name && tag.name != '') {
                         // add the tag to the list
                         tagId = addTag(tag.name)
@@ -116,6 +126,8 @@ export const deleteProject = new ValidatedMethod({
             if (project.createdBy !== Meteor.userId()) {
                 throw new Meteor.Error('Error.', 'You can\'t remove a project that you haven\'t added.')
             }
+
+            // DELETE TAG MENTIONS BEFORE REMOVING THE PROBLEM
 
             return Projects.remove({ _id: projectId })
         }
@@ -172,7 +184,7 @@ export const editProject = new ValidatedMethod({
             clean: true
         }),
     run({ projectId, headline, description, github_url, website, tags, type }) {
-        if (Meteor.isServer) {
+        if (true || Meteor.isServer) {
             let project = Projects.findOne({ _id: projectId })
 
             if (!project) {
@@ -206,9 +218,18 @@ export const editProject = new ValidatedMethod({
 
             if (tags != undefined) {
                 tags.forEach(tag => {
-                    if(tag.id && tag.id != '') {
+                    let t = getTags(tag.name)
+
+                    t = Array.from(t)
+
+                    if(t.length === 1 && t[0].id && t[0].id != '') {
                         // add mention
                         mentionTag(tag.id)
+                    } else if (t.length > 1) { 
+                        // delete multiple tags
+                        t.slice(1).forEach(duplicate => {
+                            deleteTag(duplicate._id)
+                        })
                     } else if(tag.name && tag.name != '') {
                         // add the tag to the list
                         tagId = addTag(tag.name)

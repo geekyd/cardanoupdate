@@ -18,6 +18,22 @@ export const getTag = (name) => {
     })
 }
 
+// gets add tag with same name 
+export const getTags = (name) => {
+    return Tags.find({
+        name: new RegExp(name, 'i')
+    }, {
+        sort: {
+            mentions: -1
+        }
+    })
+}
+
+// delete a tag. Remove duplicates
+export const deleteTag = (id) => {
+    return Tags.remove({ _id: id })
+} 
+
 export const mentionTag = (tagId) => {
     let tag = Tags.findOne({ _id : tagId });
     tag.mentions = parseInt(tag.mentions) + 1
